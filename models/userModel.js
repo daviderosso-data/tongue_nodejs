@@ -27,8 +27,3 @@ const userSchema = new Schema(
 
 module.exports = mongoose.model('User', userSchema);
 
-/* {
-    "name" :"Paolo",
-    "age": 32,
-    "city" : "Milano"
-} */

@@ -1,4 +1,3 @@
-//SpMugQFKhuL2IvZg
 
 const sanitize = require('express-mongo-sanitize');
 
