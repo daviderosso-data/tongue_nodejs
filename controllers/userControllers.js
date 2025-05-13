@@ -13,6 +13,8 @@ const getAllUsers = async (req, res) => {
 
         res.status(200).json(users);
     } catch (error) {
+        console.error('Errore durante il recupero degli utenti:', error.message);
+
         res.status(500).send('Errore interno del server');
     }
 }
@@ -27,6 +29,8 @@ const getUserById = async (req, res) => {
         }   
         res.status(200).json(user);
     }catch (error) {
+        console.error('Errore durante il recupero degli utenti:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -48,6 +52,8 @@ const createUser =async (req, res) => {
         await newUser.save()
         res.status(201).json(newUser);
     }catch (error) {
+        console.error('Errore durante la creazione degli utenti:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -71,6 +77,8 @@ const updateUser = async (req, res) => {
         res.status(200).json(updatedUser);
 
     }catch (error) {
+        console.error('Errore durante l\'aggiornamento degli utenti:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -88,6 +96,8 @@ const deleteUser = async (req, res) => {
         const deletedUser = await User.findByIdAndDelete(userId)
         res.status(200).json(deletedUser);
     }catch (error) {
+        console.error('Errore durante la cancellazione degli utenti:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -99,4 +109,4 @@ module.exports = {
     createUser,
     updateUser,
     deleteUser
-}
+};

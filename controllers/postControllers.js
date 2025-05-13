@@ -6,13 +6,13 @@ const { mongo } = require('mongoose');
 const getAllPosts = async (req, res) => {
     try {
       const posts = await Post.find({}); 
-        console.log('Post trovati:', posts);
       if (posts.length === 0) {
         return res.status(404).send('Nessun post trovato');
       }
   
       res.status(200).json(posts);
     } catch (error) {
+      console.error('Errore durante il recupero dei post:', error.message);
       res.status(500).send('Errore interno del server');
     }
   };
@@ -28,6 +28,8 @@ const getPostById = async (req, res) => {
         }
         res.status(200).json(post);     
 }catch (error) {
+        console.error('Errore durante il recupero dei post:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -44,6 +46,8 @@ const createPost =async (req, res) => {
         await newPost.save()
         res.status(201).json(newPost);
     }catch (error) {
+        console.error('Errore durante la creazione dei post:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -68,6 +72,8 @@ const updatePost = async (req, res) => {
         res.status(200).json(updatedPost);
 
     }catch (error) {
+        console.error('Errore durante l\'aggiornamento dei post:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -85,6 +91,8 @@ const deletePost = async (req, res) => {
         const deletedPost = await Post.findByIdAndDelete(postId)    
         res.status(200).json(deletedPost);
     }catch (error) {
+        console.error('Errore durante la cancellazione dei post:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -94,7 +102,6 @@ const deletePost = async (req, res) => {
 const getAllPostsByCity = async (req, res) => {
     try {
         const city = req.params.city;
-        console.log('Query ricevuta:', req.params);
         if (!city) {
             return res.status(400).send('Città non fornita');
         }
@@ -105,13 +112,14 @@ const getAllPostsByCity = async (req, res) => {
 
        
         const filteredPosts = posts.filter(post => post.userId && post.userId.city === city);
-        console.log('Post filtrati:', filteredPosts);
         if (filteredPosts.length === 0) {
             return res.status(404).send('Nessun post trovato per la città specificata');
         }
 
         res.status(200).json(filteredPosts);
     } catch (error) {
+        console.error('Errore durante il recupero dei post:', error.message);
+
         res.status(500).send('Errore interno del server');
     }
 };
@@ -124,5 +132,5 @@ module.exports = {
     updatePost,
     deletePost,
     getAllPostsByCity
-}
+};
 

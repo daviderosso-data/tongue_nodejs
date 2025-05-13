@@ -10,6 +10,8 @@ const getAllInteractions = async (req, res) => {
         }
         res.status(200).json(interactions);
     } catch (error) {
+        console.error('Errore durante il recupero delle interazioni:', error.message);
+
         res.status(500).send('Errore interno del server');
     }
 }
@@ -23,6 +25,8 @@ const getInteractionById = async (req, res) => {
         }   
         res.status(200).json(interaction);
     }catch (error) {
+        console.error('Errore durante il recupero delle interazioni:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -128,6 +132,8 @@ const updateInteraction = async (req, res) => {
         }
         res.status(200).json(updatedInteraction);
     }catch (error) {
+        console.error('Errore durante l\'aggiornamento delle interazioni:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -147,6 +153,8 @@ const deleteInteraction = async (req, res) => {
         }
         res.status(200).json(deletedInteraction);
     }catch (error) {
+        console.error('Errore durante la cancellazione delle interazioni:', error.message);
+
         res.status(500).send('Errore interno del server')
     }
 }
@@ -159,4 +167,4 @@ module.exports = {
     deleteInteraction,
     getInteractionsByCity,
     getInteractionsByDate
-}
+};
