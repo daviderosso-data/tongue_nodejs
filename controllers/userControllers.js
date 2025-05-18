@@ -5,7 +5,29 @@ const { default: mongoose } = require('mongoose');
 // Funzione per ottenere tutti gli utenti
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({});                          
+
+        const { id, city, limit = 20, offset = 0 } = req.query;
+        let filter = {};
+        
+        let users = await User.find(filter)
+            .skip(Number(offset))
+            .limit(Number(limit))
+            .exec();
+            
+        if (id) {
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).send('ID non valido');
+            }
+        filter._id = id;
+        }
+        
+        if (city) {
+            users = users.filter(user => user.city === city);
+        }
+        if (users.length === 0) {
+            return res.status(404).send('Nessun utente trovato');
+        } 
+
 
         if (users.length === 0) {
             return res.status(404).send('Nessun utente trovato');
@@ -19,21 +41,6 @@ const getAllUsers = async (req, res) => {
     }
 }
 
-// Funzione per ottenere un utente per ID
-const getUserById = async (req, res) => {
-    try {
-        const userId = req.params.id
-        const user = await User.findById(userId)
-        if (!user) {
-            return res.status(404).send('Utente non trovato');
-        }   
-        res.status(200).json(user);
-    }catch (error) {
-        console.error('Errore durante il recupero degli utenti:', error.message);
-
-        res.status(500).send('Errore interno del server')
-    }
-}
 
 // Funzione per creare un nuovo utente
 const createUser =async (req, res) => {
@@ -105,7 +112,6 @@ const deleteUser = async (req, res) => {
 
 module.exports = {
     getAllUsers,
-    getUserById,
     createUser,
     updateUser,
     deleteUser

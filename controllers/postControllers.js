@@ -1,12 +1,39 @@
 const express = require('express')
 const Post = require('../models/postModel');
 const { mongo } = require('mongoose');
+const { post } = require('../routes/interactionRoutes');
 
 // funzione per ottenere tutti i post
 const getAllPosts = async (req, res) => {
     try {
-      const posts = await Post.find({}); 
-      if (posts.length === 0) {
+
+      const { id, city, date, limit = 20, offset = 0 } = req.query;
+      let filter = {};
+        if (date) {
+            const startOfDay = new Date(date);
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+            filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
+        }
+        if (id) {   
+            if (!mongo.ObjectId.isValid(id)) {
+                return res.status(400).send('ID non valido');
+            }
+            filter._id = id;
+        }
+
+
+      let posts = await Post.find(filter)
+      .populate('userId')
+      .skip(Number(offset))
+      .limit(Number(limit))
+      .exec();
+
+        if (city) {
+        posts = posts.filter(post => post.userId && post.userId.city === city);
+        }
+
+      if (post.length === 0) {
         return res.status(404).send('Nessun post trovato');
       }
   
@@ -16,23 +43,6 @@ const getAllPosts = async (req, res) => {
       res.status(500).send('Errore interno del server');
     }
   };
-
-  // funzione per ottenere un post per ID
-const getPostById = async (req, res) => {
-
-    try {
-        const postId = req.params.id
-        const post = await Post.findById(postId)
-        if (!post) {
-            return res.status(404).send('Post non trovato');
-        }
-        res.status(200).json(post);     
-}catch (error) {
-        console.error('Errore durante il recupero dei post:', error.message);
-
-        res.status(500).send('Errore interno del server')
-    }
-}
 
 // funzione per creare un nuovo post
 const createPost =async (req, res) => {
@@ -97,40 +107,10 @@ const deletePost = async (req, res) => {
     }
 }
 
-
-// Funzione per ottenere tutti i post di una città
-const getAllPostsByCity = async (req, res) => {
-    try {
-        const city = req.params.city;
-        if (!city) {
-            return res.status(400).send('Città non fornita');
-        }
-
-        const posts = await Post.find({})
-            .populate('userId')
-            .exec();
-
-       
-        const filteredPosts = posts.filter(post => post.userId && post.userId.city === city);
-        if (filteredPosts.length === 0) {
-            return res.status(404).send('Nessun post trovato per la città specificata');
-        }
-
-        res.status(200).json(filteredPosts);
-    } catch (error) {
-        console.error('Errore durante il recupero dei post:', error.message);
-
-        res.status(500).send('Errore interno del server');
-    }
-};
-
-
 module.exports = {
     getAllPosts,
-    getPostById,
     createPost,
     updatePost,
     deletePost,
-    getAllPostsByCity
 };
 

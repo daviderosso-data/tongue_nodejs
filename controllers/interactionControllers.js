@@ -1,10 +1,45 @@
 const express = require('express');
 const Interaction = require('../models/interactionModel');
+const { default: mongoose } = require('mongoose');
+
 
 // Funzione per ottenere tutte le interazioni
 const getAllInteractions = async (req, res) => {
-    try {
-        const interactions = await Interaction.find({});                          
+    try { 
+        const {id,city,date, postId, limit=20,offset=0} = req.query;
+        let filter = {};
+
+        if (date) {
+            const startOfDay = new Date(date);
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+            filter.createdAt = { $gte: startOfDay, $lte: endOfDay };    
+        }
+
+        if (id) {
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).send('ID non valido');
+            }
+            filter._id = id;
+        }
+
+         if (postId) {
+            if (!mongoose.Types.ObjectId.isValid(postId)) {
+                return res.status(400).send('ID post non valido');
+            }
+            filter.postId = postId;
+        }
+
+        let interactions = await Interaction.find(filter)
+            .populate('userId')
+            .skip(Number(offset))
+            .limit(Number(limit))
+            .exec();
+            
+        if (city) {
+            interactions = interactions.filter(interaction => interaction.userId.city === city);
+        }
+                             
         if (interactions.length === 0) {
             return res.status(404).send('Nessuna interazione trovata');
         }
@@ -15,76 +50,6 @@ const getAllInteractions = async (req, res) => {
         res.status(500).send('Errore interno del server');
     }
 }
-// Funzione per ottenere un'interazione per ID
-const getInteractionById = async (req, res) => {
-    try {
-        const interactionId = req.params.id
-        const interaction = await Interaction.findById(interactionId)
-        if (!interaction) {
-            return res.status(404).send('Interazione non trovata');
-        }   
-        res.status(200).json(interaction);
-    }catch (error) {
-        console.error('Errore durante il recupero delle interazioni:', error.message);
-
-        res.status(500).send('Errore interno del server')
-    }
-}
-
-const getInteractionsByCity = async (req, res) => {
-    try {
-        const city = req.params.city; // La città viene passata come parametro URL
-        if (!city) {
-            return res.status(400).send('Città non fornita');
-        }
-
-        const interactions = await Interaction.find({})
-            .populate({
-                path: 'userId', 
-                match: { city: city } 
-            })
-            .exec();
-
-        const filteredInteractions = interactions.filter(interaction => interaction.userId !== null);
-
-        if (filteredInteractions.length === 0) {
-            return res.status(404).send('Nessuna interazione trovata per la città specificata');
-        }
-
-        res.status(200).json(filteredInteractions);
-    } catch (error) {
-        console.error('Errore durante la ricerca delle interazioni per città:', error);
-        res.status(500).send('Errore interno del server');
-    }
-};
-
-// Funzione per ottenere interazioni in base alla data
-const getInteractionsByDate = async (req, res) => {
-    try {
-        const date = req.query.date; // La data viene passata come query string
-        if (!date) {
-            return res.status(400).send('Data non fornita');
-        }
-
-        // Converte la data in un range per cercare tutte le interazioni di quel giorno
-        const startOfDay = new Date(date); 
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        const interactions = await Interaction.find({
-            createdAt: { $gte: startOfDay, $lte: endOfDay }
-        });
-
-        if (interactions.length === 0) {
-            return res.status(404).send('Nessuna interazione trovata per la data specificata');
-        }
-
-        res.status(200).json(interactions);
-    } catch (error) {
-        console.error('Errore durante la ricerca delle interazioni per data:', error);
-        res.status(500).send('Errore interno del server');
-    }
-};
 
 // Funzione per creare una nuova interazione
 const createInteraction = async (req, res) => {
@@ -118,7 +83,7 @@ const createInteraction = async (req, res) => {
 //  Funzione per aggiornare un'interazione
 const updateInteraction = async (req, res) => {
     try {
-        const interactionId = req.params.id
+        const interactionId = req.query.id
         if (!interactionId) {
             return res.status(400).send('ID dell\'interazione non fornito');
         }else if (!req.body) {
@@ -161,10 +126,7 @@ const deleteInteraction = async (req, res) => {
 
 module.exports = {
     getAllInteractions,
-    getInteractionById,
     createInteraction,
     updateInteraction,
-    deleteInteraction,
-    getInteractionsByCity,
-    getInteractionsByDate
+    deleteInteraction
 };
